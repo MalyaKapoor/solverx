@@ -1,38 +1,78 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SolverX Case Study Dashboard</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f8f9fa;
-      padding: 20px;
-    }
-    .case-study-card {
-      background-color: #fff;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      padding: 20px;
-      margin: 10px;
-    }
-    .filter-btn.active {
-      background-color: #0d6efd;
-      color: white;
-    }
-    .modal-content {
-      padding: 20px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SolverX Interactive Case Study Explorer with Gemini AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Roboto', sans-serif; background-color: #f8f9fa; }
+        .filter-btn.active { background-color: #FF7A00 !important; color: white !important; box-shadow: 0 4px 14px 0 rgba(255, 122, 0, 0.39); }
+        .card { transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out; will-change: transform; display: flex; flex-direction: column; }
+        .card-content { flex-grow: 1; }
+        .card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        .chart-container { position: relative; width: 100%; max-width: 900px; margin: auto; height: 400px; max-height: 50vh; }
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.5); display: flex; justify-content: center; align-items: center; z-index: 1000; opacity: 0; visibility: hidden; transition: opacity 0.3s, visibility 0.3s; }
+        .modal-overlay.visible { opacity: 1; visibility: visible; }
+        .modal-content { background-color: white; padding: 2rem; border-radius: 1rem; max-width: 90%; width: 600px; max-height: 80vh; overflow-y: auto; transform: scale(0.95); transition: transform 0.3s; }
+        .modal-overlay.visible .modal-content { transform: scale(1); }
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #FF7A00; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 2rem auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @media (max-width: 768px) { .chart-container { height: 300px; } }
+    </style>
 </head>
+<body class="text-gray-800">
+    <div class="container mx-auto p-4 md:p-8">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl md:text-5xl font-bold text-gray-900">SolverX Program</h1>
+            <p class="text-lg md:text-xl text-gray-600 mt-2">Interactive Professional Case Study Explorer</p>
+        </header>
 
-<body>
-  <h1 class="text-center mb-4">SolverX Case Study Explorer</h1>
+        <main>
+            <section id="filters" class="mb-8 p-6 bg-white rounded-xl shadow-md">
+                <div class="flex flex-col md:flex-row justify-between items-center gap-6">
+                    <div class="flex-grow">
+                        <h2 class="text-xl font-semibold text-gray-700">Filter Case Studies</h2>
+                    </div>
+                    <div class="relative w-full md:w-1/3">
+                        <input type="text" id="search-input" placeholder="Search by keyword..." class="w-full px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-[#FF7A00]">
+                    </div>
+                    <button id="suggest-new-btn" class="w-full md:w-auto bg-orange-500 text-white font-bold py-2 px-4 rounded-full hover:bg-orange-600 transition-colors shadow-md">✨ Suggest New Case Study</button>
+                </div>
+                <div id="filter-buttons" class="mt-6 flex flex-wrap justify-center gap-2"></div>
+            </section>
 
-  <div class="mb-3 d-flex gap-2 flex-wrap justify-content-center">
-    <button class="btn btn-outline-primary filter-btn" data-category="All">All</button>
-    <button class="btn btn-outline-prima
+            <section id="chart-section" class="mb-12 p-6 bg-white rounded-xl shadow-md">
+                <h2 class="text-2xl font-bold text-center text-gray-800 mb-4">Case Studies by Category</h2>
+                <p class="text-center text-gray-600 mb-6">This chart shows the number of case studies available in each professional domain, providing a quick overview of the knowledge base.</p>
+                <div class="chart-container">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </section>
+
+            <section id="case-studies">
+                <div id="case-study-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
+            </section>
+
+            <footer class="text-center mt-12 py-6 border-t">
+                <p class="text-gray-600">Ready to apply your skills to real projects?</p>
+                <a href="#" class="inline-block mt-4 px-8 py-3 bg-[#FF7A00] text-white font-bold rounded-full hover:bg-orange-600 transition-colors shadow-lg hover:shadow-xl">Visit SolverX Program</a>
+            </footer>
+        </main>
+    </div>
+
+    <div id="gemini-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h2 id="modal-title" class="text-2xl font-bold">✨ AI Generated Content</h2>
+                <button id="modal-close-btn" class="text-2xl font-bold">&times;</button>
+            </div>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
