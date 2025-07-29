@@ -1,58 +1,414 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Gemini-Like Case Study Explorer</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SolverX Interactive Case Study Explorer with Gemini AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Tech Neutral with Orange Accent -->
+    <!-- Application Structure Plan: The application is designed as an interactive dashboard. The core is a filterable grid of case study "cards". This structure was chosen over a linear presentation to empower users to freely explore the 40+ case studies based on their interests. Key interactions include category filtering via buttons and real-time keyword search. A bar chart provides a quantitative overview. Gemini API features were added to enhance creativity: generating detailed project ideas from existing cases and suggesting new case studies on-demand, transforming the app from a viewer to a brainstorming tool. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: List of 46 case studies across 12 categories. Goal: Organize & Explore. Viz/Method: A responsive grid of HTML cards with a "Generate Project Idea" button. Interaction: Category/search filters + Gemini API call on button click to generate new content in a modal. Justification: Transforms a static list into a dynamic, creative database. Method: Tailwind, Vanilla JS, Gemini API.
+        - Report Info: The 12 categories and the number of cases in each. Goal: Inform/Compare. Viz/Method: A vertical bar chart. Interaction: None. Justification: Quick visual summary of content distribution. Library: Chart.js (Canvas).
+        - New Feature: Suggest New Case Study. Goal: Generate new content. Viz/Method: Button triggers a modal with a category selector. Interaction: User selects a category, clicks "Generate", triggering a Gemini API call. Justification: Allows users to expand the dataset dynamically. Method: HTML Modal, JS, Gemini API.
+        - CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f8f9fa;
+        }
+        .filter-btn {
+            transition: all 0.2s ease-in-out;
+        }
+        .filter-btn.active {
+            background-color: #FF7A00 !important;
+            color: white !important;
+            box-shadow: 0 4px 14px 0 rgba(255, 122, 0, 0.39);
+        }
+        .card {
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            will-change: transform;
+            display: flex;
+            flex-direction: column;
+        }
+        .card-content {
+            flex-grow: 1;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 400px;
+            max-height: 50vh;
+        }
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+        .modal-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+        .modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            max-width: 90%;
+            width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.95);
+            transition: transform 0.3s;
+        }
+        .modal-overlay.visible .modal-content {
+            transform: scale(1);
+        }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #FF7A00;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 2rem auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        @media (max-width: 768px) {
+            .chart-container {
+                height: 300px;
+            }
+        }
+    </style>
 </head>
-<body class="bg-gray-100 font-sans text-gray-800">
+<body class="text-gray-800">
 
-  <!-- Header -->
-  <div class="max-w-6xl mx-auto px-4 py-10">
-    <h1 class="text-4xl font-bold text-center mb-2">✨ Explore Case Studies</h1>
-    <p class="text-center text-lg text-gray-600">Select a category to filter and generate new ideas.</p>
-  </div>
+    <div class="container mx-auto p-4 md:p-8">
+        
+        <header class="text-center mb-8">
+            <h1 class="text-4xl md:text-5xl font-bold text-gray-900">SolverX Program</h1>
+            <p class="text-lg md:text-xl text-gray-600 mt-2">Interactive Professional Case Study Explorer</p>
+        </header>
 
-  <!-- Filter Buttons -->
-  <div class="flex flex-wrap justify-center gap-3 mb-8 px-4">
-    <button class="tag-btn bg-orange-100 text-orange-700 px-4 py-1 rounded-full text-sm font-medium hover:bg-orange-200">All</button>
-    <button class="tag-btn bg-orange-100 text-orange-700 px-4 py-1 rounded-full text-sm font-medium hover:bg-orange-200">AI & ML</button>
-    <button class="tag-btn bg-orange-100 text-orange-700 px-4 py-1 rounded-full text-sm font-medium hover:bg-orange-200">IoT</button>
-    <button class="tag-btn bg-orange-100 text-orange-700 px-4 py-1 rounded-full text-sm font-medium hover:bg-orange-200">Web Dev</button>
-    <button class="tag-btn bg-orange-100 text-orange-700 px-4 py-1 rounded-full text-sm font-medium hover:bg-orange-200">Analytics</button>
-    <!-- Add more as needed -->
-  </div>
+        <main>
+            <section id="filters" class="mb-8 p-6 bg-white rounded-xl shadow-md">
+                <div class="flex flex-col md:flex-row justify-between items-center gap-6">
+                     <div class="flex-grow">
+                        <h2 class="text-xl font-semibold text-gray-700">Filter Case Studies</h2>
+                     </div>
+                     <div class="relative w-full md:w-1/3">
+                        <input type="text" id="search-input" placeholder="Search by keyword..." class="w-full px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-[#FF7A00]">
+                     </div>
+                     <button id="suggest-new-btn" class="w-full md:w-auto bg-orange-500 text-white font-bold py-2 px-4 rounded-full hover:bg-orange-600 transition-colors shadow-md">✨ Suggest New Case Study</button>
+                </div>
+               
+                <div id="filter-buttons" class="mt-6 flex flex-wrap justify-center gap-2">
+                </div>
+            </section>
 
-  <!-- Card Grid -->
-  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 max-w-6xl mx-auto px-4">
-    
-    <!-- Single Card -->
-    <div class="bg-white rounded-xl shadow-md p-5 flex flex-col justify-between">
-      <div>
-        <h3 class="text-xl font-semibold mb-1 text-gray-900">Early Depression Detection</h3>
-        <p class="text-sm text-gray-600">Detect early signs of depression from online comments using AI analysis.</p>
-      </div>
-      <button class="mt-4 w-full bg-orange-500 text-white py-2 rounded-full text-sm font-bold hover:bg-orange-600 transition-all">✨ Generate Idea</button>
+            <section id="chart-section" class="mb-12 p-6 bg-white rounded-xl shadow-md">
+                <h2 class="text-2xl font-bold text-center text-gray-800 mb-4">Case Studies by Category</h2>
+                <p class="text-center text-gray-600 mb-6">This chart shows the number of case studies available in each professional domain, providing a quick overview of the knowledge base.</p>
+                <div class="chart-container">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </section>
+
+            <section id="case-studies">
+                <div id="case-study-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                </div>
+            </section>
+            
+            <footer class="text-center mt-12 py-6 border-t">
+                <p class="text-gray-600">Ready to apply your skills to real projects?</p>
+                <a href="#" class="inline-block mt-4 px-8 py-3 bg-[#FF7A00] text-white font-bold rounded-full hover:bg-orange-600 transition-colors shadow-lg hover:shadow-xl">Visit SolverX Program</a>
+            </footer>
+
+        </main>
     </div>
 
-    <!-- Duplicate above for more cards -->
-    <div class="bg-white rounded-xl shadow-md p-5 flex flex-col justify-between">
-      <div>
-        <h3 class="text-xl font-semibold mb-1 text-gray-900">Smart Irrigation</h3>
-        <p class="text-sm text-gray-600">IoT-enabled smart irrigation system for efficient water usage in farming.</p>
-      </div>
-      <button class="mt-4 w-full bg-orange-500 text-white py-2 rounded-full text-sm font-bold hover:bg-orange-600 transition-all">✨ Generate Idea</button>
+    <div id="gemini-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h2 id="modal-title" class="text-2xl font-bold">✨ AI Generated Content</h2>
+                <button id="modal-close-btn" class="text-2xl font-bold">&times;</button>
+            </div>
+            <div id="modal-body">
+            </div>
+        </div>
     </div>
 
-    <!-- Add more cards here as needed -->
+    <script>
+        const caseStudiesData = [
+            { category: 'AI & Machine Learning', title: 'Early Depression Detection', description: 'Detecting early signs of depression through analysis of online user comments.' },
+            { category: 'AI & Machine Learning', title: 'Customer Churn Prediction', description: 'Predicting customer churn using historical usage patterns and demographics.' },
+            { category: 'AI & Machine Learning', title: 'Automated Resume Screening', description: 'Automating resume screening to match candidates with job requirements.' },
+            { category: 'AI & Machine Learning', title: 'Personalized E-Learning', description: 'Enhancing e-learning with personalized course recommendations based on user behavior.' },
+            { category: 'IoT & Embedded Systems', title: 'Smart Irrigation System', description: 'Developing a smart irrigation system for precision farming.' },
+            { category: 'IoT & Embedded Systems', title: 'Air Quality Monitoring', description: 'Designing a real-time air quality monitoring system for urban areas.' },
+            { category: 'IoT & Embedded Systems', title: 'Connected Inventory Tracking', description: 'Creating a connected inventory tracking system for warehouses.' },
+            { category: 'IoT & Embedded Systems', title: 'Wearable Health Tracker', description: 'Implementing a wearable health tracker for elderly care monitoring.' },
+            { category: 'Full-Stack Web Development (MERN)', title: 'Campus Recruitment Portal', description: 'Building a campus recruitment portal for students and companies.' },
+            { category: 'Full-Stack Web Development (MERN)', title: 'Online Appointment Booking', description: 'Developing an online appointment booking system for clinics.' },
+            { category: 'Full-Stack Web Development (MERN)', title: 'Peer-to-Peer Learning Platform', description: 'Launching a peer-to-peer learning platform for students.' },
+            { category: 'Full-Stack Web Development (MERN)', title: 'Donation Management Platform', description: 'Creating a donation management platform for NGOs.' },
+            { category: 'Data Analytics & Dashboards', title: 'Customer Feedback Analysis', description: 'Analyzing customer feedback to improve product satisfaction.' },
+            { category: 'Data Analytics & Dashboards', title: 'Sales Performance Reports', description: 'Generating monthly sales performance reports for regional branches.' },
+            { category: 'Data Analytics & Dashboards', title: 'Student Performance Trends', description: 'Identifying trends in student performance across semesters.' },
+            { category: 'Data Analytics & Dashboards', title: 'Marketing Campaign Evaluation', description: 'Evaluating marketing campaign effectiveness across multiple channels.' },
+            { category: 'Software Engineering', title: 'Modular Backend Design', description: 'Designing a modular backend for an online testing platform.' },
+            { category: 'Software Engineering', title: 'Scalable Microservice Architecture', description: 'Building a scalable microservice architecture for a streaming app.' },
+            { category: 'Software Engineering', title: 'System Health Logging', description: 'Implementing a logging system to track system health and failures.' },
+            { category: 'Software Engineering', title: 'Automated CI/CD Testing', description: 'Automating unit and integration testing for continuous delivery.' },
+            { category: 'Cybersecurity', title: 'Internal Risk Assessment', description: 'Conducting internal risk assessments for financial institutions.' },
+            { category: 'Cybersecurity', title: 'Phishing Attack Simulation', description: 'Simulating phishing attacks to train corporate staff.' },
+            { category: 'Cybersecurity', title: 'Real-Time Breach Monitoring', description: 'Monitoring data breaches and unauthorized access in real-time systems.' },
+            { category: 'Cybersecurity', title: 'Healthcare Cybersecurity Compliance', description: 'Ensuring compliance with cybersecurity regulations in healthcare systems.' },
+            { category: 'Business Strategy & Marketing', title: 'SaaS Go-to-Market Strategy', description: 'Creating a go-to-market strategy for a SaaS startup.' },
+            { category: 'Business Strategy & Marketing', title: 'Influencer Campaign for Brand Awareness', description: 'Building brand awareness through a targeted influencer campaign.' },
+            { category: 'Business Strategy & Marketing', title: 'Post-Pandemic Retail Model Redesign', description: 'Redesigning business models for post-pandemic retail recovery.' },
+            { category: 'Business Strategy & Marketing', title: 'New Market Entry Evaluation', description: 'Evaluating new market entry strategies for a regional brand.' },
+            { category: 'Management Skills', title: 'University Innovation Summit', description: 'Organizing a university-wide innovation summit with multiple stakeholders.' },
+            { category: 'Management Skills', title: 'Cross-Functional Team Management', description: 'Managing cross-functional teams in a product development cycle.' },
+            { category: 'Management Skills', title: 'Crisis Management for Product Launch', description: 'Handling crisis management during a live online product launch.' },
+            { category: 'Management Skills', title: 'Agile Project Execution Planning', description: 'Planning semester-long project execution with Agile methodologies.' },
+            { category: 'Customer Service & Sales', title: 'Improving Customer Support', description: 'Improving response time and satisfaction in customer support teams.' },
+            { category: 'Customer Service & Sales', title: 'Upskilling Retail Sales Staff', description: 'Upskilling sales staff to improve conversion in retail showrooms.' },
+            { category: 'Customer Service & Sales', title: 'Customer Loyalty Program', description: 'Building a customer loyalty program for a subscription service.' },
+            { category: 'Customer Service & Sales', title: 'Structured Complaint Resolution', description: 'Resolving service complaints using a structured escalation model.' },
+            { category: 'Finance & Accounting', title: 'VC Investment Reporting', description: 'Preparing investment reports for early-stage venture capital firms.' },
+            { category: 'Finance & Accounting', title: 'Startup Budget Forecasting', description: 'Forecasting quarterly budgets for a startup in growth phase.' },
+            { category: 'Finance & Accounting', title: 'Retail Cash Flow Management', description: 'Managing cash flow for a retail business during seasonal demand.' },
+            { category: 'Finance & Accounting', title: 'SME Financial Health Evaluation', description: 'Evaluating financial health of SMEs for loan approvals.' },
+            { category: 'Creative & Design', title: 'Ride-Sharing App UI Redesign', description: 'Redesigning the UI for a city-based ride-sharing mobile app.' },
+            { category: 'Creative & Design', title: 'Sustainable Fashion Brand Identity', description: 'Creating brand identity for a sustainable fashion label.' },
+            { category: 'Creative & Design', title: 'User-Friendly Fintech Dashboard', description: 'Developing a user-friendly dashboard for a fintech application.' },
+            { category: 'Creative & Design', title: 'Interactive Educational Infographics', description: 'Designing interactive infographics for educational websites.' }
+        ];
 
-  </div>
+        document.addEventListener('DOMContentLoaded', () => {
+            const grid = document.getElementById('case-study-grid');
+            const filterButtonsContainer = document.getElementById('filter-buttons');
+            const searchInput = document.getElementById('search-input');
+            const modal = document.getElementById('gemini-modal');
+            const modalTitle = document.getElementById('modal-title');
+            const modalBody = document.getElementById('modal-body');
+            const modalCloseBtn = document.getElementById('modal-close-btn');
+            const suggestNewBtn = document.getElementById('suggest-new-btn');
 
-  <!-- Footer -->
-  <div class="text-center text-gray-500 text-sm mt-12 mb-6">
-    © 2025 SolverX Program. All rights reserved.
-  </div>
+            const categories = ['All', ...new Set(caseStudiesData.map(item => item.category))];
 
+            function openModal() { modal.classList.add('visible'); }
+            function closeModal() { modal.classList.remove('visible'); }
+
+            modalCloseBtn.addEventListener('click', closeModal);
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    closeModal();
+                }
+            });
+
+            async function callGeminiAPI(prompt, isJson = false) {
+                modalTitle.textContent = '✨ Generating...';
+                modalBody.innerHTML = '<div class="loader"></div>';
+                openModal();
+
+                const apiKey = ""; 
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+                
+                const payload = {
+                    contents: [{ role: "user", parts: [{ text: prompt }] }]
+                };
+
+                if (isJson) {
+                    payload.generationConfig = {
+                        responseMimeType: "application/json",
+                        responseSchema: {
+                            type: "OBJECT",
+                            properties: {
+                                "title": { "type": "STRING" },
+                                "description": { "type": "STRING" }
+                            },
+                            required: ["title", "description"]
+                        }
+                    };
+                }
+
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`API Error: ${response.statusText}`);
+                    }
+
+                    const result = await response.json();
+                    
+                    if (result.candidates && result.candidates.length > 0) {
+                        return result.candidates[0].content.parts[0].text;
+                    } else {
+                        throw new Error("No content generated.");
+                    }
+                } catch (error) {
+                    console.error("Gemini API call failed:", error);
+                    return `<p class="text-red-500">Sorry, something went wrong. Please try again later. <br><small>${error.message}</small></p>`;
+                }
+            }
+
+            function renderCards(filteredData) {
+                grid.innerHTML = '';
+                filteredData.forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = 'card bg-white rounded-xl shadow-md p-6';
+                    card.dataset.category = item.category;
+
+                    card.innerHTML = `
+                        <div class="card-content">
+                            <span class="inline-block bg-orange-100 text-[#FF7A00] text-xs font-semibold px-3 py-1 rounded-full mb-3 self-start">${item.category}</span>
+                            <h3 class="text-xl font-bold text-gray-900 mb-2">${item.title}</h3>
+                            <p class="text-gray-600">${item.description}</p>
+                        </div>
+                        <div class="mt-4 pt-4 border-t border-gray-200">
+                             <button class="generate-idea-btn w-full bg-gray-200 text-gray-700 font-bold py-2 px-4 rounded-full hover:bg-gray-300 transition-colors text-sm">✨ Generate Project Idea</button>
+                        </div>
+                    `;
+                    
+                    card.querySelector('.generate-idea-btn').addEventListener('click', async () => {
+                        const prompt = `Based on the case study "${item.title}: ${item.description}", generate a concrete project idea. Structure the response in Markdown with the following sections: a short 'Project Summary', 'Key Features' as a bulleted list, and a 'Primary Success Metric'.`;
+                        const result = await callGeminiAPI(prompt);
+                        modalTitle.textContent = `✨ Project Idea: ${item.title}`;
+                        modalBody.innerHTML = result.replace(/\n/g, '<br>');
+                    });
+
+                    grid.appendChild(card);
+                });
+            }
+
+            function setupFilters() {
+                categories.forEach(category => {
+                    const button = document.createElement('button');
+                    button.className = 'filter-btn px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-full hover:bg-gray-200';
+                    button.textContent = category;
+                    button.dataset.category = category;
+                    if (category === 'All') button.classList.add('active');
+                    button.addEventListener('click', () => {
+                        document.querySelector('.filter-btn.active').classList.remove('active');
+                        button.classList.add('active');
+                        filterAndRender();
+                    });
+                    filterButtonsContainer.appendChild(button);
+                });
+            }
+            
+            function filterAndRender() {
+                const activeCategory = document.querySelector('.filter-btn.active').dataset.category;
+                const searchTerm = searchInput.value.toLowerCase();
+                let filteredData = caseStudiesData;
+
+                if (activeCategory !== 'All') {
+                    filteredData = filteredData.filter(item => item.category === activeCategory);
+                }
+
+                if (searchTerm) {
+                    filteredData = filteredData.filter(item => 
+                        item.title.toLowerCase().includes(searchTerm) || 
+                        item.description.toLowerCase().includes(searchTerm)
+                    );
+                }
+                
+                renderCards(filteredData);
+            }
+
+            function setupChart() {
+                const ctx = document.getElementById('categoryChart').getContext('2d');
+                const categoryCounts = caseStudiesData.reduce((acc, item) => {
+                    acc[item.category] = (acc[item.category] || 0) + 1;
+                    return acc;
+                }, {});
+
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: Object.keys(categoryCounts),
+                        datasets: [{
+                            label: '# of Case Studies',
+                            data: Object.values(categoryCounts),
+                            backgroundColor: 'rgba(255, 122, 0, 0.6)',
+                            borderColor: 'rgba(255, 122, 0, 1)',
+                            borderWidth: 1,
+                            borderRadius: 5,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } }, x: { ticks: { autoSkip: false, maxRotation: 90, minRotation: 45 } } },
+                        plugins: { legend: { display: false }, tooltip: { displayColors: false, callbacks: { title: () => '', label: (c) => `${c.label}: ${c.parsed.y} cases` } } }
+                    }
+                });
+            }
+            
+            suggestNewBtn.addEventListener('click', () => {
+                modalTitle.textContent = '✨ Suggest a New Case Study';
+                let optionsHtml = categories.filter(c => c !== 'All').map(c => `<option value="${c}">${c}</option>`).join('');
+                
+                modalBody.innerHTML = `
+                    <p class="mb-4">Select a category and the AI will generate a new, unique case study problem for it.</p>
+                    <select id="category-select" class="w-full p-2 border rounded-md mb-4">
+                        ${optionsHtml}
+                    </select>
+                    <button id="generate-new-case-btn" class="w-full bg-[#FF7A00] text-white font-bold py-2 px-4 rounded-full hover:bg-orange-600 transition-colors">Generate</button>
+                `;
+                openModal();
+
+                document.getElementById('generate-new-case-btn').addEventListener('click', async () => {
+                    const selectedCategory = document.getElementById('category-select').value;
+                    const prompt = `Generate a new, creative case study problem statement for the '${selectedCategory}' category. It must be a single, concise problem description similar to existing ones but distinct. Provide a unique title and a description.`;
+                    const result = await callGeminiAPI(prompt, true);
+                    
+                    try {
+                        const parsed = JSON.parse(result);
+                        modalTitle.textContent = `✨ New Case Study: ${selectedCategory}`;
+                        modalBody.innerHTML = `
+                            <h3 class="text-xl font-bold mb-2">${parsed.title}</h3>
+                            <p>${parsed.description}</p>
+                            <p class="text-sm text-gray-500 mt-4">Note: This is an AI suggestion and is not added to the main list.</p>
+                        `;
+                    } catch (e) {
+                         modalBody.innerHTML = `<p class="text-red-500">The AI returned an invalid format. Please try again.</p>`;
+                    }
+                });
+            });
+
+            renderCards(caseStudiesData);
+            setupFilters();
+            setupChart();
+            searchInput.addEventListener('input', filterAndRender);
+        });
+    </script>
 </body>
 </html>
