@@ -1,58 +1,62 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Gemini-Like Case Study Explorer</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-100 font-sans text-gray-800">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Explore Case Studies</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      body {
+        background: radial-gradient(circle at center, #fef9f6, #f4f0ec);
+      }
+    </style>
+  </head>
+  <body class="font-sans text-gray-800">
 
-  <!-- Header -->
-  <div class="max-w-6xl mx-auto px-4 py-10">
-    <h1 class="text-4xl font-bold text-center mb-2">✨ Explore Case Studies</h1>
-    <p class="text-center text-lg text-gray-600">Select a category to filter and generate new ideas.</p>
-  </div>
+    <!-- Heading -->
+    <section class="text-center px-4 py-10">
+      <h1 class="text-4xl sm:text-5xl font-bold mb-2">✨ Explore Case Studies</h1>
+      <p class="text-gray-600 text-lg">Select a category to filter and generate new ideas.</p>
+    </section>
 
-  <!-- Filter Buttons -->
-  <div class="flex flex-wrap justify-center gap-3 mb-8 px-4">
-    <button class="tag-btn bg-orange-100 text-orange-700 px-4 py-1 rounded-full text-sm font-medium hover:bg-orange-200">All</button>
-    <button class="tag-btn bg-orange-100 text-orange-700 px-4 py-1 rounded-full text-sm font-medium hover:bg-orange-200">AI & ML</button>
-    <button class="tag-btn bg-orange-100 text-orange-700 px-4 py-1 rounded-full text-sm font-medium hover:bg-orange-200">IoT</button>
-    <button class="tag-btn bg-orange-100 text-orange-700 px-4 py-1 rounded-full text-sm font-medium hover:bg-orange-200">Web Dev</button>
-    <button class="tag-btn bg-orange-100 text-orange-700 px-4 py-1 rounded-full text-sm font-medium hover:bg-orange-200">Analytics</button>
-    <!-- Add more as needed -->
-  </div>
-
-  <!-- Card Grid -->
-  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 max-w-6xl mx-auto px-4">
-    
-    <!-- Single Card -->
-    <div class="bg-white rounded-xl shadow-md p-5 flex flex-col justify-between">
-      <div>
-        <h3 class="text-xl font-semibold mb-1 text-gray-900">Early Depression Detection</h3>
-        <p class="text-sm text-gray-600">Detect early signs of depression from online comments using AI analysis.</p>
-      </div>
-      <button class="mt-4 w-full bg-orange-500 text-white py-2 rounded-full text-sm font-bold hover:bg-orange-600 transition-all">✨ Generate Idea</button>
+    <!-- Filter Buttons -->
+    <div class="flex flex-wrap justify-center gap-3 mb-10 px-4">
+      <button class="px-4 py-1 rounded-full text-sm font-medium bg-orange-100 text-orange-700 hover:bg-orange-200">All</button>
+      <button class="px-4 py-1 rounded-full text-sm font-medium bg-orange-100 text-orange-700 hover:bg-orange-200">AI & ML</button>
+      <button class="px-4 py-1 rounded-full text-sm font-medium bg-orange-100 text-orange-700 hover:bg-orange-200">IoT</button>
+      <button class="px-4 py-1 rounded-full text-sm font-medium border border-orange-600 text-orange-800 bg-white hover:bg-orange-50">Web Dev</button>
+      <button class="px-4 py-1 rounded-full text-sm font-medium bg-orange-100 text-orange-700 hover:bg-orange-200">Analytics</button>
     </div>
 
-    <!-- Duplicate above for more cards -->
-    <div class="bg-white rounded-xl shadow-md p-5 flex flex-col justify-between">
-      <div>
-        <h3 class="text-xl font-semibold mb-1 text-gray-900">Smart Irrigation</h3>
-        <p class="text-sm text-gray-600">IoT-enabled smart irrigation system for efficient water usage in farming.</p>
+    <!-- Cards Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 max-w-6xl mx-auto px-4">
+
+      <!-- Card 1 -->
+      <div class="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 flex flex-col justify-between">
+        <div>
+          <h2 class="text-xl font-semibold mb-1">Early Depression Detection</h2>
+          <p class="text-sm text-gray-600">Detect early signs of depression from online comments using AI analysis.</p>
+        </div>
+        <button class="mt-4 bg-orange-500 text-white py-2 rounded-full font-semibold hover:bg-orange-600 transition-all">✨ Generate Idea</button>
       </div>
-      <button class="mt-4 w-full bg-orange-500 text-white py-2 rounded-full text-sm font-bold hover:bg-orange-600 transition-all">✨ Generate Idea</button>
+
+      <!-- Card 2 -->
+      <div class="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 flex flex-col justify-between">
+        <div>
+          <h2 class="text-xl font-semibold mb-1">Smart Irrigation</h2>
+          <p class="text-sm text-gray-600">IoT-enabled smart irrigation system for efficient water usage in farming.</p>
+        </div>
+        <button class="mt-4 bg-orange-500 text-white py-2 rounded-full font-semibold hover:bg-orange-600 transition-all">✨ Generate Idea</button>
+      </div>
+
+      <!-- Add More Cards Here as Needed -->
+
     </div>
 
-    <!-- Add more cards here as needed -->
+    <!-- Footer -->
+    <footer class="text-center text-gray-500 text-sm mt-12 mb-6">
+      © 2025 SolverX Program. All rights reserved.
+    </footer>
 
-  </div>
-
-  <!-- Footer -->
-  <div class="text-center text-gray-500 text-sm mt-12 mb-6">
-    © 2025 SolverX Program. All rights reserved.
-  </div>
-
-</body>
+  </body>
 </html>
